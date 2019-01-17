@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="statuscope",
-    version="0.0.1",
+    version="0.0.2",
     author="Baris Demiray",
     author_email="baris.demiray@gmail.com",
     description="A package to ease log sending to Statuscope",
@@ -13,6 +13,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/statuscope-io/python-package",
     packages=setuptools.find_packages(),
+    install_requires=[
+        'requests',
+        'simplejson'
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
