@@ -40,7 +40,7 @@ class LogSender(Thread):
                 log_message = self.log_queue.get()
                 data = {'token':self.token, 'status':'OK', 'message':log_message}
 
-                task_address = 'https://api.statuscope.io/tasks/{}'.format(self.task_id)
+                task_address = 'https://staging.statuscope.io/tasks/{}'.format(self.task_id)
                 r = requests.post(task_address, data=simplejson.dumps(data), headers=headers)
 
                 # Print only first 100 characters, since successful responses are shorter
