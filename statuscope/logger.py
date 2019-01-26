@@ -8,7 +8,7 @@ from threading import Thread
 import time
 
 # A threaded sender/consumer that sends log messages over to Statuscope
-class LogSender(Thread):
+class Logger(Thread):
     def __init__(self, token, task_id):
         Thread.__init__(self)
         self.token = token
