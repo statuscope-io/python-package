@@ -1,14 +1,20 @@
 # python-package
 Source code of the Python package that is on PyPI
 
+# Install & Update
 ```python
-sudo pip3 install statuscope
+sudo pip3 install --upgrade statuscope
 ```
 
 # Example
 
+Here is a sample use of the package.
+
 ```python
-from statuscope import Logger
+import argparse
+import time
+import sys
+from statuscope.logger import Logger
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sends logs to Statuscope.io')
@@ -39,3 +45,10 @@ if __name__ == '__main__':
             print("Ctrl-C received, exiting...")
             sys.exit()
 ```
+
+Then to update a log task,
+
+```bash
+python3 test.py --token cfa0d2ed --task_id QbZJjD2u3uzFvTYAM
+```
+

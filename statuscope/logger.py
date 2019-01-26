@@ -38,7 +38,7 @@ class Logger(Thread):
         while not self.log_queue.empty():
             try:
                 log_message = self.log_queue.get()
-                data = {'token':self.token, 'status':'OK', 'message':log_message}
+                data = {'token':self.token, 'message':log_message}
 
                 task_address = 'https://staging.statuscope.io/tasks/{}'.format(self.task_id)
                 r = requests.post(task_address, data=simplejson.dumps(data), headers=headers)
