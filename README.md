@@ -14,6 +14,8 @@ Here is a sample use of the package.
 import argparse
 import time
 import sys
+import random
+
 from statuscope.logger import Logger
 
 if __name__ == '__main__':
@@ -29,8 +31,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     log_sender = Logger(args.token, args.task_id)
-    log_sender.daemon = True
     log_sender.start()
+
+    # We'll generate some silly log messages because test data is usually so boring
+    objects = [ 'plane', 'bike', 'book', 'icecream', 'dog' ]
+    colors = [ 'yellow', 'green', 'red', 'black', 'pink', 'white' ]
 
     counter = 0
     while True:
@@ -39,10 +44,15 @@ if __name__ == '__main__':
         try:
             time.sleep(1)
 
-            log_sender.add_log("Here is a log %s" % counter)
+            log_sender.log("Log %s: I have a %s %s" % (counter, random.choice(colors), random.choice(objects)))
 
         except KeyboardInterrupt:
             print("Ctrl-C received, exiting...")
+            log_sender.flush()
+            try:
+                log_sender.join()
+            except Exception as e:
+                print(str(e))
             sys.exit()
 ```
 
@@ -51,4 +61,3 @@ Then to update a log task,
 ```bash
 python3 test.py --token cfa0d2ed --task_id QbZJjD2u3uzFvTYAM
 ```
-
