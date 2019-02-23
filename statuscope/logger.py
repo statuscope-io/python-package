@@ -7,9 +7,35 @@ import argparse
 import threading
 import time
 
+class LoggerConfig():
+    def __init__(self):
+        self.logs_enabled = False
+        self.destination = 'production'
+
+    def enable_logs(self):
+        self.logs_enabled = True
+
+    def disable_logs(self):
+        self.logs_enabled = False
+
+    def is_logs_enabled(self):
+        return self.logs_enabled
+
+    def send_to_staging(self):
+        self.destination = 'staging'
+
+    def is_sending_to_staging(self):
+        return self.destination == 'staging'
+
+    def send_to_production(self):
+        self.destination = 'production'
+
+    def is_sending_to_production(self):
+        return self.destination == 'production'
+
 # A threaded sender/consumer that sends log messages over to Statuscope
 class Logger(threading.Thread):
-    def __init__(self, token, task_id):
+    def __init__(self, token, task_id, config):
         threading.Thread.__init__(self)
         self.token = token
         self.task_id = task_id
@@ -17,7 +43,24 @@ class Logger(threading.Thread):
         self.stop_event = threading.Event()
         self.flush_event = threading.Event()
 
-        print("LogSender [token=%s, taskId=%s]" % (self.token, self.task_id))
+        # Read the config and set internal variables
+        self.config = config
+        self.base_url = ''
+        if self.config.is_sending_to_production():
+            self.base_url = 'api.statuscope.io'
+        elif self.config.is_sending_to_staging():
+            self.base_url = 'staging.statuscope.io'
+        else:
+            self._log("ERROR: Shall send logs either to production or to staging. Destination invalid.")
+
+        self._log("LogSender [token=%s, taskId=%s]" % (self.token, self.task_id))
+
+    def _log(self, message):
+        '''
+        Internal log method
+        '''
+        if self.config.is_logs_enabled():
+            print(message)
 
     def flush(self):
         """ Triggers a flush event to consume the queue, and then a stop event """
@@ -33,7 +76,7 @@ class Logger(threading.Thread):
 
         # Send log messages every 5 seconds, not immediately
         while not self.stop_event.isSet() or (self.flush_event.isSet() and not self.log_queue.empty()):
-            print("Sleeping for %s second(s) before next delivery" % (wait_time))
+            self._log("Sleeping for %s second(s) before next delivery" % (wait_time))
 
             # Do not wait if there is a flush request, jump to send_logs() directly
             if not self.flush_event.isSet():
@@ -43,14 +86,14 @@ class Logger(threading.Thread):
                         if not self.flush_event.isSet():
                             time.sleep(wait_time / 100.0)
                 except Exception as e:
-                    print(str(e))
+                    self._log(str(e))
 
             self.send_logs()
 
-        print("LogSender is stopping")
+        self._log("LogSender is stopping")
 
     def log(self, log_message):
-        print("Enqueuing log message '%s'" % log_message)
+        self._log("Enqueuing log message '%s'" % log_message)
         self.log_queue.put(log_message)
 
     def send_logs(self):
@@ -61,22 +104,23 @@ class Logger(threading.Thread):
                 log_message = self.log_queue.get()
                 data = {'token':self.token, 'message':log_message, 'seqid': int(time.time() * 1000.0)}
 
-                task_address = 'https://staging.statuscope.io/tasks/{}'.format(self.task_id)
+                task_address = 'https://{}/tasks/{}'.format(self.base_url, self.task_id)
                 r = requests.post(task_address, data=simplejson.dumps(data), headers=headers)
 
                 # Print only first 100 characters, since successful responses are shorter
-                print("Server returned: {}".format(r.text[:100]))
+                self._log("Server returned: {}".format(r.text[:100]))
 
                 # Access response fields and values
                 if r.json()['result'] == 'OK':
-                    print('Success')
+                    self._log('Success')
                 else:
-                    print('Failure')
+                    self._log('Failure')
 
             except requests.exceptions.ConnectionError as ConnErr:
-                print("Cannot connect to server")
+                self._log("Cannot connect to server")
                 return False
 
             except simplejson.scanner.JSONDecodeError as DecodeErr:
-                print("Cannot decode server response")
+                self._log("Cannot decode server response")
                 return False
+
