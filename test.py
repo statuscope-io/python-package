@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # Enable logs and send to staging server at staging.statuscope.io
     log_config = LoggerConfig()
     log_config.enable_logs()
-    log_config.send_to_staging()
+    log_config.send_to_test()
 
     log_sender = Logger(args.token, args.task_id, log_config)
     log_sender.start()
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     # We'll generate some silly log messages because test data is usually so boring
     objects = [ 'plane', 'bike', 'book', 'icecream', 'dog' ]
     colors = [ 'yellow', 'green', 'red', 'black', 'pink', 'white' ]
+    severities = [ 'debug', 'info', 'warning', 'error', 'alert' ]
 
     counter = 0
     while True:
@@ -38,7 +39,21 @@ if __name__ == '__main__':
         try:
             time.sleep(1)
 
-            log_sender.log("Log %s: I have a %s %s" % (counter, random.choice(colors), random.choice(objects)))
+            severity = random.choice(severities)
+            color = random.choice(colors)
+            object = random.choice(objects)
+
+            if severity == 'debug':
+                log_sender.debug("Log %s: I have a %s %s" % (counter, color, object))
+            elif severity == 'info':
+                log_sender.info("Log %s: I have a %s %s" % (counter, color, object))
+            elif severity == 'warning':
+                log_sender.warn("Log %s: I have a %s %s" % (counter, color, object))
+            elif severity == 'error':
+                log_sender.error("Log %s: I have a %s %s" % (counter, color, object))
+            elif severity == 'alert':
+                log_sender.alert("Log %s: I have a %s %s" % (counter, color, object))
+
 
         except KeyboardInterrupt:
             print("Ctrl-C received, exiting...")
@@ -48,4 +63,3 @@ if __name__ == '__main__':
             except Exception as e:
                 print(str(e))
             sys.exit()
-

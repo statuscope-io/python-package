@@ -33,6 +33,12 @@ class LoggerConfig():
     def is_sending_to_production(self):
         return self.destination == 'production'
 
+    def send_to_test(self):
+        self.destination = 'test'
+
+    def is_sending_to_test(self):
+        return self.destination == 'test'
+
 # A threaded sender/consumer that sends log messages over to Statuscope
 class Logger(threading.Thread):
     def __init__(self, token, task_id, config):
@@ -47,11 +53,13 @@ class Logger(threading.Thread):
         self.config = config
         self.base_url = ''
         if self.config.is_sending_to_production():
-            self.base_url = 'api.statuscope.io'
+            self.base_url = 'https://api.statuscope.io'
         elif self.config.is_sending_to_staging():
-            self.base_url = 'staging.statuscope.io'
+            self.base_url = 'https://staging.statuscope.io'
+        elif self.config.is_sending_to_test():
+            self.base_url = 'http://localhost:3000'
         else:
-            self._log("ERROR: Shall send logs either to production or to staging. Destination invalid.")
+            self._log("ERROR: Shall send logs either to production, to staging, or to test. Destination invalid.")
 
         self._log("LogSender [token=%s, taskId=%s]" % (self.token, self.task_id))
 
@@ -92,9 +100,25 @@ class Logger(threading.Thread):
 
         self._log("LogSender is stopping")
 
-    def log(self, log_message):
-        self._log("Enqueuing log message '%s'" % log_message)
-        self.log_queue.put(log_message)
+    def debug(self, log_message):
+        self._log("Enqueuing log message '%s:%s'" % ('DEBUG', log_message))
+        self.log_queue.put(('debug', log_message))
+
+    def info(self, log_message):
+        self._log("Enqueuing log message '%s:%s'" % ('INFO', log_message))
+        self.log_queue.put(('info', log_message))
+
+    def warn(self, log_message):
+        self._log("Enqueuing log message '%s:%s'" % ('WARN', log_message))
+        self.log_queue.put(('warning', log_message))
+
+    def error(self, log_message):
+        self._log("Enqueuing log message '%s:%s'" % ('ERROR', log_message))
+        self.log_queue.put(('error', log_message))
+
+    def alert(self, log_message):
+        self._log("Enqueuing log message '%s:%s'" % ('ALERT', log_message))
+        self.log_queue.put(('alert', log_message))
 
     def send_logs(self):
         headers = {'Content-Type':'application/json'}
@@ -102,9 +126,18 @@ class Logger(threading.Thread):
         while not self.log_queue.empty():
             try:
                 log_message = self.log_queue.get()
-                data = {'token':self.token, 'message':log_message, 'seqid': int(time.time() * 1000.0)}
 
-                task_address = 'https://{}/tasks/{}'.format(self.base_url, self.task_id)
+                # Verify queue element
+                if not isinstance(log_message, tuple):
+                    self._log('Queue element is not a tuple, skipping.')
+                    continue
+                elif len(log_message) != 2:
+                    self._log('Log element does not have severity and/or message, or has invalid size')
+                    continue
+
+                data = {'token':self.token, 'severity': log_message[0], 'message': log_message[1], 'seqid': int(time.time() * 1000.0)}
+
+                task_address = '{}/tasks/{}'.format(self.base_url, self.task_id)
                 r = requests.post(task_address, data=simplejson.dumps(data), headers=headers)
 
                 # Print only first 100 characters, since successful responses are shorter
@@ -123,4 +156,3 @@ class Logger(threading.Thread):
             except simplejson.scanner.JSONDecodeError as DecodeErr:
                 self._log("Cannot decode server response")
                 return False
-
