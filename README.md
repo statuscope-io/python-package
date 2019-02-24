@@ -17,6 +17,7 @@ import sys
 import random
 
 from statuscope.logger import Logger
+from statuscope.logger import LoggerConfig
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sends logs to Statuscope.io')
@@ -30,7 +31,8 @@ if __name__ == '__main__':
                         required=True)
     args = parser.parse_args()
 
-    log_sender = Logger(args.token, args.task_id)
+    log_config = LoggerConfig()
+    log_sender = Logger(args.token, args.task_id, log_config)
     log_sender.start()
 
     # We'll generate some silly log messages because test data is usually so boring
