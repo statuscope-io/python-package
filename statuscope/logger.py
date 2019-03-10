@@ -100,42 +100,42 @@ class Logger(threading.Thread):
 
         self._log("LogSender is stopping")
 
-    def debug(self, log_message):
-        self._log("Enqueuing log message '%s:%s'" % ('DEBUG', log_message))
-        self.log_queue.put(('debug', log_message))
+    def debug(self, log_message, component=None):
+        self._log("Enqueuing log message '%s:%s:%s'" % ('DEBUG', component, log_message))
+        self.log_queue.put({'severity': 'debug', 'component': component, 'message': log_message})
 
-    def info(self, log_message):
-        self._log("Enqueuing log message '%s:%s'" % ('INFO', log_message))
-        self.log_queue.put(('info', log_message))
+    def info(self, log_message, component=None):
+        self._log("Enqueuing log message '%s:%s:%s'" % ('INFO', component, log_message))
+        self.log_queue.put({'severity': 'info', 'component': component, 'message': log_message})
 
-    def warn(self, log_message):
-        self._log("Enqueuing log message '%s:%s'" % ('WARN', log_message))
-        self.log_queue.put(('warning', log_message))
+    def warn(self, log_message, component=None):
+        self._log("Enqueuing log message '%s:%s:%s'" % ('WARN', component, log_message))
+        self.log_queue.put({'severity': 'warning', 'component': component, 'message': log_message})
 
-    def error(self, log_message):
-        self._log("Enqueuing log message '%s:%s'" % ('ERROR', log_message))
-        self.log_queue.put(('error', log_message))
+    def error(self, log_message, component=None):
+        self._log("Enqueuing log message '%s:%s:%s'" % ('ERROR', component, log_message))
+        self.log_queue.put({'severity': 'error', 'component': component, 'message': log_message})
 
-    def alert(self, log_message):
-        self._log("Enqueuing log message '%s:%s'" % ('ALERT', log_message))
-        self.log_queue.put(('alert', log_message))
+    def alert(self, log_message, component=None):
+        self._log("Enqueuing log message '%s:%s:%s'" % ('ALERT', component, log_message))
+        self.log_queue.put({'severity': 'alert', 'component': component, 'message': log_message})
 
     def send_logs(self):
         headers = {'Content-Type':'application/json'}
 
         while not self.log_queue.empty():
             try:
-                log_message = self.log_queue.get()
+                log_item = self.log_queue.get()
 
                 # Verify queue element
-                if not isinstance(log_message, tuple):
-                    self._log('Queue element is not a tuple, skipping.')
+                if not isinstance(log_item, dict):
+                    self._log('Queue element is not a dict, skipping.')
                     continue
-                elif len(log_message) != 2:
-                    self._log('Log element does not have severity and/or message, or has invalid size')
+                elif not 'message' in log_item or not 'severity' in log_item:
+                    self._log('Log element does not have message and/or severity field')
                     continue
 
-                data = {'token':self.token, 'severity': log_message[0], 'message': log_message[1], 'seqid': int(time.time() * 1000.0)}
+                data = {'token':self.token, 'severity': log_item['severity'], 'component': log_item['component'], 'message': log_item['message'], 'seqid': int(time.time() * 1000.0)}
 
                 task_address = '{}/tasks/{}'.format(self.base_url, self.task_id)
                 r = requests.post(task_address, data=simplejson.dumps(data), headers=headers)

@@ -30,6 +30,7 @@ if __name__ == '__main__':
     # We'll generate some silly log messages because test data is usually so boring
     objects = [ 'plane', 'bike', 'book', 'icecream', 'dog' ]
     colors = [ 'yellow', 'green', 'red', 'black', 'pink', 'white' ]
+    components = [ 'auth', 'backend', 'frontend', 'db', 'payment' ]
     severities = [ 'debug', 'info', 'warning', 'error', 'alert' ]
 
     counter = 0
@@ -40,19 +41,20 @@ if __name__ == '__main__':
             time.sleep(1)
 
             severity = random.choice(severities)
+            component = random.choice(components)
             color = random.choice(colors)
             object = random.choice(objects)
 
             if severity == 'debug':
-                log_sender.debug("Log %s: I have a %s %s" % (counter, color, object))
+                log_sender.debug("Log %s: I have a %s %s" % (counter, color, object), component)
             elif severity == 'info':
-                log_sender.info("Log %s: I have a %s %s" % (counter, color, object))
+                log_sender.info("Log %s: I have a %s %s" % (counter, color, object), component)
             elif severity == 'warning':
-                log_sender.warn("Log %s: I have a %s %s" % (counter, color, object))
+                log_sender.warn("Log %s: I have a %s %s" % (counter, color, object), component)
             elif severity == 'error':
-                log_sender.error("Log %s: I have a %s %s" % (counter, color, object))
+                log_sender.error("Log %s: I have a %s %s" % (counter, color, object), component)
             elif severity == 'alert':
-                log_sender.alert("Log %s: I have a %s %s" % (counter, color, object))
+                log_sender.alert("Log %s: I have a %s %s" % (counter, color, object), component)
 
 
         except KeyboardInterrupt:
