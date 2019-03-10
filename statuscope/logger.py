@@ -41,7 +41,7 @@ class LoggerConfig():
 
 # A threaded sender/consumer that sends log messages over to Statuscope
 class Logger(threading.Thread):
-    def __init__(self, token, task_id, config):
+    def __init__(self, token, task_id, config=None):
         threading.Thread.__init__(self)
         self.token = token
         self.task_id = task_id
@@ -50,7 +50,12 @@ class Logger(threading.Thread):
         self.flush_event = threading.Event()
 
         # Read the config and set internal variables
-        self.config = config
+        # If no config is given, create a default one
+        if config:
+            self.config = config
+        else:
+            self.config = LoggerConfig()
+
         self.base_url = ''
         if self.config.is_sending_to_production():
             self.base_url = 'https://api.statuscope.io'
