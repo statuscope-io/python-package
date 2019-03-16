@@ -23,6 +23,7 @@ if __name__ == '__main__':
     log_config = LoggerConfig()
     log_config.enable_logs()
     log_config.send_to_test()
+    log_config.set_component('staging')
 
     log_sender = Logger(args.token, args.task_id, log_config)
     log_sender.start()
@@ -48,11 +49,11 @@ if __name__ == '__main__':
             if severity == 'debug':
                 log_sender.debug("Log %s: I have a %s %s" % (counter, color, object), component)
             elif severity == 'info':
-                log_sender.info("Log %s: I have a %s %s" % (counter, color, object), component)
+                log_sender.info("Log %s: I have a %s %s" % (counter, color, object))
             elif severity == 'warning':
                 log_sender.warn("Log %s: I have a %s %s" % (counter, color, object), component)
             elif severity == 'error':
-                log_sender.error("Log %s: I have a %s %s" % (counter, color, object), component)
+                log_sender.error("Log %s: I have a %s %s" % (counter, color, object))
             elif severity == 'alert':
                 log_sender.alert("Log %s: I have a %s %s" % (counter, color, object), component)
 

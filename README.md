@@ -34,6 +34,9 @@ if __name__ == '__main__':
     # Create a logger configuration object and enable logs
     log_config = LoggerConfig()
     log_config.enable_logs()
+    # Set the component that these logs belong to
+    # Note that this is a global setting and it can be overridden on each (debug|info|warning|error|alert) call
+    log_config.set_component('test')
 
     log_sender = Logger(args.token, args.task_id, log_config)
     log_sender.start()

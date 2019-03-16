@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="statuscope",
-    version="0.1.0",
+    version="0.1.1",
     author="Baris Demiray",
     author_email="baris.demiray@gmail.com",
     description="A package to ease log sending to Statuscope",
@@ -23,4 +23,3 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
 )
-

@@ -11,9 +11,17 @@ class LoggerConfig():
     def __init__(self):
         self.logs_enabled = False
         self.destination = 'production'
+        self.component = None
 
     def enable_logs(self):
         self.logs_enabled = True
+
+    def set_component(self, component):
+        if isinstance(component, str):
+            self.component = component
+
+    def get_component(self):
+        return self.component
 
     def disable_logs(self):
         self.logs_enabled = False
@@ -140,7 +148,18 @@ class Logger(threading.Thread):
                     self._log('Log element does not have message and/or severity field')
                     continue
 
-                data = {'token':self.token, 'severity': log_item['severity'], 'component': log_item['component'], 'message': log_item['message'], 'seqid': int(time.time() * 1000.0)}
+                # Set obligatory fields
+                data = {'token':self.token, 'severity': log_item['severity'], 'message': log_item['message'], 'seqid': int(time.time() * 1000.0)}
+                # Set component fields; if there is one given in the (debug|info|warning|error|alert) call, it takes
+                # preceence, if not, we check if there has been a global one set through the set_component() call
+                if 'component' in log_item and log_item['component']:
+                    self._log("There is a component field in the log call")
+                    data['component'] = log_item['component']
+                elif self.config.get_component():
+                    self._log("A global component value has been set in the configuration")
+                    data['component'] = self.config.get_component()
+                else:
+                    self._log("Neither log call nor configuration has a component field")
 
                 task_address = '{}/tasks/{}'.format(self.base_url, self.task_id)
                 r = requests.post(task_address, data=simplejson.dumps(data), headers=headers)
