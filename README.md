@@ -1,5 +1,5 @@
 # python-package
-Source code of the Python package that is on PyPI
+Source code of the https://www.statuscope.io/ Python package that is on PyPI. More details on https://docs.statuscope.io/.
 
 # Install & Update
 ```bash
